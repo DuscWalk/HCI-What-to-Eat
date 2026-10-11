@@ -1,0 +1,19 @@
+# Local-only and private research materials
+/.local/
+/private/
+/data/raw/
+.env
+.env.*
+!.env.example
+*.local.*
+
+# Operating system and office temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+~$*
+*.tmp
+
+# Python cache for repository utilities
+__pycache__/
+*.py[cod]
