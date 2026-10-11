@@ -2,6 +2,7 @@
 /.local/
 /private/
 /data/raw/
+/docs/用户调研设计/
 .env
 .env.*
 !.env.example

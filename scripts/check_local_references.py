@@ -12,7 +12,7 @@ PATTERNS = {
     "local file or Zotero link": re.compile(r"(?:file|zotero)://", re.IGNORECASE),
     "personal home directory": re.compile(r"/(?:Users|home)/[^/\s]+/"),
 }
-PRIVATE_PREFIXES = (".local/", "private/", "data/raw/")
+LOCAL_ONLY_PREFIXES = (".local/", "private/", "data/raw/", "docs/用户调研设计/")
 
 
 def violations(text):
@@ -30,8 +30,8 @@ def main():
     checked = 0
     for name in filter(None, names):
         path = root / name
-        if name.startswith(PRIVATE_PREFIXES):
-            errors.append(f"{name}: private material must not be tracked")
+        if name.startswith(LOCAL_ONLY_PREFIXES):
+            errors.append(f"{name}: local-only material must not be tracked")
             continue
         if path.resolve() == own_path or not path.is_file():
             continue
