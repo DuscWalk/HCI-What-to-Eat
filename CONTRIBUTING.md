@@ -36,6 +36,8 @@ git push -u origin docs/your-name-interview
 
 `main` 和 `develop` 不直接堆放个人试验改动，不强制推送共享分支。发生冲突时核对双方内容，不直接用一方整份覆盖另一方。
 
+仓库管理员还应在 GitHub 的 Settings → Rules → Rulesets 中保护 `main` 和 `develop`：要求通过 PR 合并、至少一位其他组员审阅、通过 `Check local references` 检查，并禁止强制推送和删除分支。仓库中的约定不能代替服务器端规则。
+
 ## 文档约定
 
 - 优先在 Markdown 中协作，文件使用 UTF-8 编码。
