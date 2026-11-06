@@ -12,7 +12,7 @@ PATTERNS = {
     "local file or Zotero link": re.compile(r"(?:file|zotero)://", re.IGNORECASE),
     "personal home directory": re.compile(r"/(?:Users|home)/[^/\s]+/"),
 }
-LOCAL_ONLY_PREFIXES = (".local/", "private/", "data/raw/", "docs/用户调研设计/")
+LOCAL_ONLY_PREFIXES = (".local/", "private/", "data/", "docs/用户调研设计/")
 
 
 def violations(text):
