@@ -1,10 +1,17 @@
 # 首版交互原型
 
-按 `docs/正式材料/产品需求与页面结构.md` 搭的前端原型，只关注页面与交互，数据全部为模拟数据。
+按 `docs/正式材料/产品需求与页面结构.md` 搭的前端原型，只关注页面与交互。店铺和菜品来自公开数据，跨平台价格、优惠券和历史订单是构造的（见「数据」一节）。
 
 ## 运行
 
 需要 Node.js 18 及以上。
+
+图片资源保存在服务器，不随 Git 提交。首次拉取项目时，在仓库根目录同步线上资源（需要已配置的 `njuse` SSH 连接）：
+
+```bash
+mkdir -p prototype/public/img
+rsync -a njuse:/var/www/what-to-eat/img/ prototype/public/img/
+```
 
 ```bash
 cd prototype
@@ -14,6 +21,8 @@ npm run build      # 类型检查并打包到 dist/
 ```
 
 桌面浏览器中显示为手机框，手机浏览器中全屏显示。数据保存在浏览器本地；「个性化 → 演示工具」可以模拟进入下一餐或重置演示数据。
+
+`public/img/` 和 `dist/` 都是已忽略的本地运行/构建副本。仓库保留代码、生成的菜单和 `scripts/photo_assignments.json` 配图清单；原始数据保存在 `njuse:~/what-to-eat-data`，线上图片、来源表及核对图册保存在 `njuse:/var/www/what-to-eat/img/`。仅更新代码时，部署不要删除服务器已有的 `img/` 目录；替换图片后，先同步图片，再发布引用新版本地址的页面代码。
 
 ## 页面与需求对照
 
@@ -25,7 +34,7 @@ npm run build      # 类型检查并打包到 dist/
 | 比一比（`src/pages/CartPage.tsx`、`src/overlays/WheelSheet.tsx`） | 购物车按最低实付排序并标出「这几单最省」；候选部分：F7 上限 3–5 与替换、F8 按餐次清空、F9 最近移出与恢复、F24 转盘 |
 | 记录页（`src/pages/RecordsPage.tsx`） | F10 快速锁定、F11 三类状态、F12 标记原因与「不用于推荐」 |
 | 个性化页（`src/pages/SettingsPage.tsx`） | F13 长期口味、自动弹出时机、推荐数量、候选上限与保留、随机按钮显隐；N5 分项授权（含「使用各平台优惠券」） |
-| 店铺页、确认订单、下单结果（`src/pages/ShopPage.tsx`、`OrderPage.tsx`、`DonePage.tsx`） | 看菜单和各平台菜价、加购物车、改份数、同店加购；底栏和确认订单页直接显示各平台含券实付，默认选最低的平台 |
+| 店铺页、确认订单、下单结果（`src/pages/ShopPage.tsx`、`OrderPage.tsx`、`DonePage.tsx`） | 看菜单和各平台菜价、评价、加购物车、改份数、同店加购；底栏和确认订单页直接显示各平台含券实付，默认选最低的平台 |
 | 平台收银台（`src/pages/PayPage.tsx`） | F14 跳转闭环：只在付款这一步跳转外卖平台（首版模拟），付款后回到 App |
 
 推荐规则见 `src/logic/recommend.ts`（PRD 第四节的规则版本，不含机器学习）。界面只通过 `src/api/client.ts` 取数（N6），接入真实接口时替换这个文件即可。
@@ -50,7 +59,38 @@ npm run build      # 类型检查并打包到 dist/
 
 **最低价**针对购物车：同一家店的菜只选一次，App 按每个上架平台分别计算「菜品小计 + 包装费 + 配送费 − 店铺满减 − 该平台可用的最优一张券」，相当于「每家店 × 每个平台一个购物车」。缺菜的平台标出「缺 N 道菜」，不参与比最低价。价格明细里写明用了哪张券。
 
-模拟数据里多数店同时在美团、饿了么上架，菜价、配送费、满减、送达时间各不相同，部分菜只在一个平台有；优惠券见 `src/api/mockData.ts` 的 `COUPONS`。
+多数店同时在美团、饿了么上架，菜价、配送费、满减、送达时间各不相同，部分菜只在一个平台有；优惠券见 `src/api/mockData.ts` 的 `COUPONS`。
+
+## 数据
+
+33 家店、239 道菜，由 `scripts/build_data.py` 生成到 `src/api/shops.generated.ts` 和 `public/img/`，不要手改生成的文件。菜品和店铺都有图（`img/d/`、`img/s/` 是缩略图，`img/l/` 是点开放大用的图）；首页菜品、店铺页、比一比、确认订单、记录页的图片点一下可以放大，本身就能点的整行（首页店铺头部、候选浮窗）里的图不放大。
+
+| 来源 | 用在哪 |
+| --- | --- |
+| [美团 VitaBench](https://huggingface.co/datasets/meituan-longcat/VitaBench)（MIT） | 27 家店的店名、评分、菜名、价格。原数据是给 AI 代理做评测用的，每家店只有几道菜，混有非餐饮商品，脚本里已筛掉 |
+| GitHub 上「仿美团／仿饿了么」练手项目保存的平台接口数据（2017–2021 年） | 奔跑吧湘菜、鲍姐花甲粉、麦当劳、必胜客、茶百道 5 家店的完整菜单、菜品图，以及真实的配送费、送达时间、满减 |
+| 手写 | 老街麻辣烫（两份数据里都没有麻辣烫），茶百道和夜宵烧烤王的评价 |
+| 品牌官网、中文菜谱及餐饮页面、[维基共享资源](https://commons.wikimedia.org/) | 按完整菜名人工核对主料和做法后固定配图。同款菜可以跨店复用，同店不同商品分别配图，单品与套餐、不同份数须体现差别。麦当劳和霸王茶姬部分单品用官网图，其他采用对应菜式的照片；少量套餐用单品图拼排。逐图来源、配图范围和权利状态见 `public/img/CREDITS.tsv` |
+
+照片不全是菜单所列店铺的实拍。`scripts/photo_assignments.json` 保存每道菜对应的图片、来源页面、原图链接、尺寸和 SHA-256；未声明开放许可的来源单独标注，不沿用菜单数据的 MIT 许可。打开 `/img/review.html` 可按菜名或店名搜索，点击图片查看大图和来源。
+
+缩略图保留完整画面，避免套餐单品被裁掉。大图保留原比例，最长边不超过 1200 像素；低分辨率原图不做放大处理。图片地址带基于输出内容的 `?v=` 版本号，换图后普通刷新即可请求新图；相同内容的版本号保持不变。
+
+构造的部分：另一个平台的菜价（整体上下浮动一两元、个别菜下架）、配送费和满减，距离、月售，菜品的口味和忌口（按菜名关键词推断），店铺的搜索标签（如「工作餐」「练后餐」）。同样的输入每次生成同样的结果。优惠券、历史订单、记录页的初始记录在 `src/api/mockData.ts` 里手写，按菜名引用菜品，重新生成数据后菜名对不上会直接报错。
+
+改选店或配图后重新生成（需要 Python、Pillow 和 requests）：
+
+```bash
+# 原始数据在服务器 njuse:~/what-to-eat-data，先复制到仓库里已忽略的 data/ 下
+mkdir -p data
+scp -r njuse:~/what-to-eat-data data/
+python3 prototype/scripts/fetch_photos.py data/what-to-eat-data
+python3 prototype/scripts/build_data.py data/what-to-eat-data
+```
+
+新增或替换照片时，在 `scripts/photo_assignments.json` 的 `assets` 中记录已核对的来源与文件校验和，再在 `dishes` 中按「店铺 ID → 完整菜名」绑定，店铺封面单独在 `shops` 中指定。清单副本保存在数据目录的 `images/curated/manifest.json`，修改后同步两份。`fetch_photos.py` 只下载和校验清单中的照片，不自动搜图或随机轮换；缺少菜名映射、图片内容变动或同店不同商品使用相同图片时，构建会在删除旧输出前报错。套餐拼排记录组成图和数量；原菜单未列出的配餐明细只能标为示意。
+
+首页搜索用 [Fuse.js](https://www.fusejs.io/) 做模糊匹配，范围是店名、类别、标签、菜名和口味。
 
 ## 浮窗交互
 

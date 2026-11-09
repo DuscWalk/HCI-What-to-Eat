@@ -1,2 +1,5 @@
 node_modules/
 dist/
+
+# 图片、来源表和核对图册保存在服务器；需要时按 README 拉取或生成
+/public/img/

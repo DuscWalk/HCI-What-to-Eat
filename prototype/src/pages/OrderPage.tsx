@@ -78,7 +78,7 @@ export function OrderPage({ shopId, platform: initial }: { shopId: string; platf
               const unit = listing.prices[dish.id];
               return (
                 <li key={dish.id} className={unit === undefined ? 'missing' : ''}>
-                  <Thumb emoji={dish.emoji} hue={shop.hue} size={44} />
+                  <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={44} zoom={{ src: dish.imageLarge, title: dish.name, sub: shop.name }} />
                   <span className="order-line-name">
                     {dish.name}
                     <small>{unit === undefined ? `${PLATFORM_LABEL[platform]}没有这道菜` : `¥${unit}`}</small>

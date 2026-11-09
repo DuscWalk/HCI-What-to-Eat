@@ -1,11 +1,46 @@
-import { useEffect, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { IconBack, IconBookmark, IconMinus, IconPlus } from './Icons';
+import { IconBack, IconBookmark, IconClose, IconMinus, IconPlus } from './Icons';
 
-export function Thumb({ emoji, hue, size = 56 }: { emoji: string; hue: number; size?: number }) {
+/** 点开放大的内容：大图（没有时用缩略图）和说明文字。 */
+export interface ThumbZoom {
+  src?: string;
+  title: string;
+  sub?: string;
+}
+
+/**
+ * 缩略图：有图片时显示图片，没有时用 emoji 和色块。
+ * 传了 zoom 且有图片时，点一下放大查看；不要用在本身可点击的按钮或整行里。
+ */
+export function Thumb({ emoji, hue, size = 56, src, zoom }: { emoji: string; hue: number; size?: number; src?: string; zoom?: ThumbZoom }) {
+  const [open, setOpen] = useState(false);
+  if (src && zoom) {
+    return (
+      <>
+        <button
+          type="button"
+          className="thumb has-img zoomable"
+          style={{ '--h': hue, '--s': `${size}px` } as CSSProperties}
+          aria-label={`查看大图：${zoom.title}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
+        >
+          <img src={src} alt="" loading="lazy" decoding="async" />
+        </button>
+        {open && <ImageViewer src={zoom.src ?? src} title={zoom.title} sub={zoom.sub} onClose={() => setOpen(false)} />}
+      </>
+    );
+  }
   return (
-    <span className="thumb" style={{ '--h': hue, '--s': `${size}px` } as CSSProperties} aria-hidden="true">
-      {emoji}
+    <span
+      className={`thumb${src ? ' has-img' : ''}`}
+      style={{ '--h': hue, '--s': `${size}px` } as CSSProperties}
+      aria-hidden="true"
+    >
+      {src ? <img src={src} alt="" loading="lazy" decoding="async" /> : emoji}
     </span>
   );
 }
@@ -142,6 +177,32 @@ export function useEscape(onEscape: () => void) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onEscape]);
+}
+
+/** 放大查看图片：铺满手机框，点任意位置、按 Esc 或关闭按钮收起。 */
+export function ImageViewer({ src, title, sub, onClose }: { src: string; title: string; sub?: string; onClose: () => void }) {
+  useEscape(onClose);
+  const host = document.getElementById('overlay-root');
+  // 门户里的点击会沿 React 树冒泡回缩略图所在的行，这里截住
+  const close = (e: MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+  };
+  const view = (
+    <div className="viewer" role="dialog" aria-modal="true" aria-label={title} onClick={close}>
+      <figure className="viewer-figure">
+        <img src={src} alt={title} />
+        <figcaption>
+          <b>{title}</b>
+          {sub && <span>{sub}</span>}
+        </figcaption>
+      </figure>
+      <button type="button" className="viewer-close" aria-label="关闭" onClick={close} autoFocus>
+        <IconClose size={22} />
+      </button>
+    </div>
+  );
+  return host ? createPortal(view, host) : view;
 }
 
 /** 底部面板。渲染到 App 顶层的 overlay-root，避免被页面的层级压在底部栏下面。 */

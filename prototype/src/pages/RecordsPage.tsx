@@ -145,7 +145,7 @@ function RecordRow({
 
   return (
     <li className={`record${edit.excluded ? ' muted' : ''}`}>
-      <Thumb emoji={shop.emoji} hue={shop.hue} size={52} />
+      <Thumb emoji={shop.emoji} src={shop.image} hue={shop.hue} size={52} zoom={{ src: shop.imageLarge, title: shop.name }} />
       <div className="record-main">
         <div className="record-top">
           <button type="button" className="record-name" onClick={onShop}>

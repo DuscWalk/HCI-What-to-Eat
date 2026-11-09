@@ -52,7 +52,7 @@ export function ShopPage({ shopId, openCart }: { shopId: string; openCart: boole
       <PageHeader title={shop.name} sub={`${platforms}都能点 · 付款时跳转平台`} onBack={back} />
 
       <section className="shop-hero">
-        <Thumb emoji={shop.emoji} hue={shop.hue} size={64} />
+        <Thumb emoji={shop.emoji} src={shop.image} hue={shop.hue} size={64} zoom={{ src: shop.imageLarge, title: shop.name }} />
         <div className="shop-info">
           <div className="shop-meta">
             <span className="star">★ {shop.rating.toFixed(1)}</span>
@@ -79,14 +79,14 @@ export function ShopPage({ shopId, openCart }: { shopId: string; openCart: boole
       </section>
 
       <h2 className="menu-title">菜单</h2>
-      <ul className="menu">
+      <ul className={`menu${shop.reviews?.length ? ' has-next' : ''}`}>
         {orderDishes(shop.dishes, prefs).map((dish) => {
           const avoided = avoidedBy(dish, prefs);
           const ordered = h?.orderedDishIds.has(dish.id);
           const priced = shop.listings.filter((l) => l.prices[dish.id] !== undefined);
           return (
             <li key={dish.id} className={`menu-item${avoided.length ? ' avoided' : ''}`}>
-              <Thumb emoji={dish.emoji} hue={shop.hue} size={64} />
+              <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={64} zoom={{ src: dish.imageLarge, title: dish.name, sub: shop.name }} />
               <div className="menu-main">
                 <div className="menu-name">
                   {dish.name}
@@ -129,6 +129,30 @@ export function ShopPage({ shopId, openCart }: { shopId: string; openCart: boole
         })}
       </ul>
 
+      {shop.reviews?.length ? (
+        <>
+          <h2 className="menu-title">
+            评价 <small>{shop.reviews.length} 条</small>
+          </h2>
+          <ul className="reviews">
+            {shop.reviews.map((r, i) => (
+              <li key={i} className="review">
+                <div className="review-head">
+                  <b>{r.user}</b>
+                  <span className="review-stars" aria-label={`${r.rating} 星`}>
+                    {'★'.repeat(r.rating)}
+                    <span className="off">{'★'.repeat(5 - r.rating)}</span>
+                  </span>
+                  <span className="review-date">{r.daysAgo === 0 ? '今天' : `${r.daysAgo} 天前`}</span>
+                </div>
+                <p>{r.text}</p>
+                {r.dish && <span className="review-dish">{r.dish}</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
       <div className="shop-bar">
         {lines.length ? (
           <button type="button" className="shop-bar-text" onClick={() => setSheetOpen(true)} aria-haspopup="dialog">
@@ -153,7 +177,7 @@ export function ShopPage({ shopId, openCart }: { shopId: string; openCart: boole
           <ul className="order-lines sheet-lines">
             {lines.map(({ dish, qty }) => (
               <li key={dish.id}>
-                <Thumb emoji={dish.emoji} hue={shop.hue} size={40} />
+                <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={40} zoom={{ src: dish.imageLarge, title: dish.name, sub: shop.name }} />
                 <span className="order-line-name">{dish.name}</span>
                 <QtyControl
                   qty={qty}

@@ -7,6 +7,7 @@ export interface DockCart {
   shopId: string;
   shopName: string;
   emoji: string;
+  image?: string;
   hue: number;
   portions: number;
   /** 各平台中最低的含券实付；缺菜时为空 */
@@ -21,6 +22,7 @@ export interface DockCandidate {
   name: string;
   shopName: string;
   emoji: string;
+  image?: string;
   hue: number;
   /** 单点最低实付 */
   total?: number;
@@ -316,7 +318,7 @@ export function CandidateDock({
               {carts.map((c) => (
                 <li key={c.shopId} className="dock-row">
                   <button type="button" className="dock-row-main" onClick={() => onCheckout(c.shopId)}>
-                    <Thumb emoji={c.emoji} hue={c.hue} size={40} />
+                    <Thumb emoji={c.emoji} src={c.image} hue={c.hue} size={40} />
                     <span className="dock-row-text">
                       <b>
                         {c.shopName}
@@ -342,7 +344,7 @@ export function CandidateDock({
               {candidates.map((item) => (
                 <li key={item.dishId} className="dock-row">
                   <button type="button" className="dock-row-main" onClick={() => onOpenShop(item.shopId)}>
-                    <Thumb emoji={item.emoji} hue={item.hue} size={40} />
+                    <Thumb emoji={item.emoji} src={item.image} hue={item.hue} size={40} />
                     <span className="dock-row-text">
                       <b>{item.name}</b>
                       <small>

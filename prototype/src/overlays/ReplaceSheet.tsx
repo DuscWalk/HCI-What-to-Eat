@@ -36,7 +36,7 @@ export function ReplaceSheet({
           return (
             <li key={c.dishId}>
               <button type="button" className="replace-item" onClick={() => onReplace(c.dishId)}>
-                <Thumb emoji={dish.emoji} hue={shop.hue} size={44} />
+                <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={44} />
                 <span className="replace-text">
                   <span className="replace-name">{dish.name}</span>
                   <span className="replace-meta">

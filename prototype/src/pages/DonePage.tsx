@@ -46,7 +46,7 @@ export function DonePage({ shopId, platform, lines: raw }: { shopId: string; pla
         <ul className="order-lines">
           {lines.map(({ dish, qty }) => (
             <li key={dish.id}>
-              <Thumb emoji={dish.emoji} hue={shop.hue} size={40} />
+              <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={40} zoom={{ src: dish.imageLarge, title: dish.name, sub: shop.name }} />
               <span className="order-line-name">{dish.name}</span>
               <span className="muted">× {qty}</span>
             </li>

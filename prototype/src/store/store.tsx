@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from 'react';
+import { DEMO_EDITS, demoEvents } from '../api/mockData';
 import type {
   AppEvent,
   Candidate,
@@ -12,8 +13,8 @@ import type {
 } from '../types';
 
 const STORAGE_KEY = 'what-to-eat-prototype';
-/** 数据结构变了（多平台 + 购物车），旧版本保存的数据直接作废 */
-const STORAGE_VERSION = 2;
+/** 数据结构或店铺数据变了（v3：换成 VitaBench 等来源的店铺），旧版本保存的数据直接作废 */
+const STORAGE_VERSION = 3;
 const TRASH_LIMIT = 12;
 export const MAX_QTY = 9;
 
@@ -59,20 +60,13 @@ function clampSettings(settings: Settings): Settings {
 /** 演示用的初始记录：让记录页一开始就有三类状态。 */
 function seed(): PersistedState {
   const now = Date.now();
-  const H = 3_600_000;
   return {
     candidates: [],
     trash: [],
     carts: [],
     settings: DEFAULT_SETTINGS,
-    edits: { s11: { reason: 'rush', excluded: true } },
-    events: [
-      { type: 'candidate', shopId: 's13', dishId: 's13-a', at: now - 74 * H },
-      { type: 'candidate', shopId: 's05', dishId: 's05-a', at: now - 26 * H },
-      { type: 'candidate', shopId: 's10', dishId: 's10-b', at: now - 26 * H + 60_000 },
-      { type: 'candidate', shopId: 's01', dishId: 's01-a', at: now - 26 * H + 120_000 },
-      { type: 'chosen', shopId: 's01', dishId: 's01-a', platform: 'meituan', at: now - 26 * H + 300_000 },
-    ],
+    edits: structuredClone(DEMO_EDITS),
+    events: demoEvents(now),
     mealShift: 0,
     dockHintSeen: false,
   };

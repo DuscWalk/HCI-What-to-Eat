@@ -18,6 +18,12 @@ export interface Dish {
   emoji: string;
   monthlySales: number;
   isNew: boolean;
+  /** 菜品图（相对路径）；没有时显示 emoji */
+  image?: string;
+  /** 点开放大时用的图 */
+  imageLarge?: string;
+  /** 数据自带的标签（如「高蛋白」「低脂」），只用于搜索 */
+  tags?: string[];
 }
 
 export interface Discount {
@@ -46,8 +52,24 @@ export interface Shop {
   emoji: string;
   hue: number;
   isNewShop?: boolean;
+  /** 搜索用的标签，如「工作餐」「练后餐」「夜宵」 */
+  tags: string[];
+  /** 店铺图（相对路径）；没有时显示 emoji */
+  image?: string;
+  /** 点开放大时用的图 */
+  imageLarge?: string;
+  reviews?: Review[];
   dishes: Dish[];
   listings: Listing[];
+}
+
+export interface Review {
+  user: string;
+  rating: number;
+  daysAgo: number;
+  text: string;
+  /** 评价里提到的菜名 */
+  dish?: string;
 }
 
 /** 用户在某平台账户里的优惠券（理想 API 提供，需授权）。 */

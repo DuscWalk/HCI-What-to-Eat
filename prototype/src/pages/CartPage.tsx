@@ -111,7 +111,7 @@ export function CartPage() {
                   return (
                     <li key={v.cart.shopId} className={`cand cart-card${isCheapest ? ' picked' : ''}`}>
                       <div className="cand-top">
-                        <Thumb emoji={v.shop.emoji} hue={v.shop.hue} size={52} />
+                        <Thumb emoji={v.shop.emoji} src={v.shop.image} hue={v.shop.hue} size={52} zoom={{ src: v.shop.imageLarge, title: v.shop.name }} />
                         <div className="cand-main">
                           <div className="cand-dish">
                             {v.shop.name}
@@ -181,7 +181,7 @@ export function CartPage() {
                 {rows.map(({ c, shop, dish, best, inCart }) => (
                   <li key={c.dishId} id={`cand-${c.dishId}`} className={`cand${pickedId === c.dishId ? ' picked' : ''}`}>
                     <div className="cand-top">
-                      <Thumb emoji={dish.emoji} hue={shop.hue} size={48} />
+                      <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={48} zoom={{ src: dish.imageLarge, title: dish.name, sub: shop.name }} />
                       <div className="cand-main">
                         <div className="cand-dish">{dish.name}</div>
                         <button type="button" className="link-shop" onClick={() => goShop(shop.id)}>

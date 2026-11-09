@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js';
 import { useMemo, useState } from 'react';
 import { PLATFORM_LABEL } from '../api/client';
 import { IconChevron, IconSearch } from '../components/Icons';
@@ -12,19 +13,42 @@ import type { Shop } from '../types';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   全部: '🍽️',
-  盖饭: '🍚',
-  面食: '🍜',
-  轻食: '🥗',
+  盖饭快餐: '🍱',
   川湘菜: '🌶️',
-  烧腊: '🍖',
-  粥点: '🥣',
+  家常菜: '🥘',
+  东北菜: '🍖',
+  粤菜: '🍲',
+  汤粥: '🥣',
+  轻食: '🥗',
+  东南亚菜: '🍛',
   汉堡炸鸡: '🍔',
-  '粉/米线': '🍲',
-  饺子: '🥟',
-  '咖喱/日料': '🍛',
-  韩式: '🍱',
-  西北菜: '🥙',
-  香锅: '🥘',
+  西餐: '🍕',
+  粉面: '🍜',
+  小吃点心: '🥟',
+  麻辣烫: '🍢',
+  烧烤: '🍢',
+  奶茶饮品: '🧋',
+  甜品蛋糕: '🍰',
+};
+
+/** 首页卡片里最多露出几道菜，其余在店铺页看 */
+const CARD_DISHES = 6;
+
+/**
+ * 搜索用 Fuse.js 做模糊匹配：店名、类别、标签（如「工作餐」「练后餐」）、菜名、口味都能搜到。
+ * threshold 偏严，避免两三个字的中文词匹配到不相干的店。
+ */
+const SEARCH_OPTIONS = {
+  keys: [
+    { name: 'name', weight: 3 },
+    { name: 'tags', weight: 2 },
+    { name: 'category', weight: 2 },
+    { name: 'dishes.name', weight: 1.5 },
+    { name: 'dishes.tastes', weight: 1 },
+    { name: 'dishes.tags', weight: 0.5 },
+  ],
+  threshold: 0.3,
+  ignoreLocation: true,
 };
 
 type Sort = 'default' | 'fast' | 'cheap' | 'rating';
@@ -56,6 +80,7 @@ export function HomePage({ active }: { active: boolean }) {
   const prefs = useMemo<TastePrefs>(() => (useTastePrefs ? { likes, avoids } : NO_PREFS), [useTastePrefs, likes, avoids]);
 
   const categories = useMemo(() => ['全部', ...new Set(shops.map((s) => s.category))], [shops]);
+  const fuse = useMemo(() => new Fuse(shops, SEARCH_OPTIONS), [shops]);
   const orderedShopCount = useMemo(() => shops.filter((s) => history.has(s.id)).length, [shops, history]);
   const showOrderedFilter = orderedShopCount > 0;
   const cartCount = useMemo(
@@ -65,19 +90,18 @@ export function HomePage({ active }: { active: boolean }) {
 
   const list = useMemo(() => {
     const q = query.trim();
-    const filtered = shops.filter(
-      (s) =>
-        (category === '全部' || s.category === category) &&
-        (!onlyOrdered || !showOrderedFilter || history.has(s.id)) &&
-        (!q || s.name.includes(q) || s.category.includes(q) || s.dishes.some((d) => d.name.includes(q))),
+    // 有搜索词时先按相关度排，「综合」排序下保持这个顺序
+    const matched = q ? fuse.search(q).map((r) => r.item) : shops;
+    const filtered = matched.filter(
+      (s) => (category === '全部' || s.category === category) && (!onlyOrdered || !showOrderedFilter || history.has(s.id)),
     );
     const sorted = [...filtered];
     if (sort === 'fast') sorted.sort((a, b) => fastestMin(a) - fastestMin(b));
     if (sort === 'cheap') sorted.sort((a, b) => cheapestDishTotal(a, coupons) - cheapestDishTotal(b, coupons));
     if (sort === 'rating') sorted.sort((a, b) => b.rating - a.rating);
-    if (sort === 'default') sorted.sort((a, b) => browseScore(b, prefs) - browseScore(a, prefs));
+    if (sort === 'default' && !q) sorted.sort((a, b) => browseScore(b, prefs) - browseScore(a, prefs));
     return sorted;
-  }, [shops, query, category, sort, onlyOrdered, showOrderedFilter, history, prefs, coupons]);
+  }, [shops, fuse, query, category, sort, onlyOrdered, showOrderedFilter, history, prefs, coupons]);
 
   const resetFilters = () => {
     setQuery('');
@@ -94,7 +118,7 @@ export function HomePage({ active }: { active: boolean }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜店铺或菜品，比如「米线」"
+            placeholder="搜店铺、菜品，比如「练后餐」"
             enterKeyHint="search"
           />
         </label>
@@ -189,11 +213,11 @@ export function HomePage({ active }: { active: boolean }) {
 
 function ShopCard({ shop, prefs, orderCount, inCart }: { shop: Shop; prefs: TastePrefs; orderCount?: number; inCart?: number }) {
   const { goShop, toggleCandidate, isCandidate } = useActions();
-  const dishes = orderDishes(shop.dishes, prefs);
+  const dishes = orderDishes(shop.dishes, prefs).slice(0, CARD_DISHES);
   return (
     <article className="shop-card">
       <button type="button" className="shop-head" onClick={() => goShop(shop.id)}>
-        <Thumb emoji={shop.emoji} hue={shop.hue} size={60} />
+        <Thumb emoji={shop.emoji} src={shop.image} hue={shop.hue} size={60} />
         <div className="shop-info">
           <div className="shop-name">
             <span>{shop.name}</span>
@@ -226,7 +250,7 @@ function ShopCard({ shop, prefs, orderCount, inCart }: { shop: Shop; prefs: Tast
           return (
             <div className={`dish-mini${avoided.length ? ' avoided' : ''}`} key={dish.id}>
               <div className="dish-mini-thumb">
-                <Thumb emoji={dish.emoji} hue={shop.hue} size={84} />
+                <Thumb emoji={dish.emoji} src={dish.image} hue={shop.hue} size={84} zoom={{ src: dish.imageLarge, title: dish.name, sub: shop.name }} />
                 {avoided.length > 0 ? (
                   <span className="mini-avoid">含{avoided.join('、')}</span>
                 ) : (

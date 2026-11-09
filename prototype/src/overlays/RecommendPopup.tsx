@@ -128,7 +128,13 @@ export function RecommendPopup({ auto, onClose }: { auto: boolean; onClose: () =
                 const kindLabel = KIND_LABEL[item.kind];
                 return (
                   <li className="rec-item" key={item.dish.id}>
-                    <Thumb emoji={item.dish.emoji} hue={item.shop.hue} size={60} />
+                    <Thumb
+                      emoji={item.dish.emoji}
+                      src={item.dish.image}
+                      hue={item.shop.hue}
+                      size={60}
+                      zoom={{ src: item.dish.imageLarge, title: item.dish.name, sub: item.shop.name }}
+                    />
                     <div className="rec-main">
                       <div className="rec-title">
                         <span className="rec-dish">{item.dish.name}</span>
